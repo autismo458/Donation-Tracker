@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Tracker - Global Sync</title>
+    <title>Master Tracker - Ultimate Version</title>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
         body { margin: 0; background: #020617; color: white; min-height: 200vh; }
@@ -54,9 +54,9 @@
     </div>
 
     <div class="sync-tray">
-        <input id="syncIdInput" placeholder="Enter Global Sync Key (e.g. MySecretVault77)">
-        <button style="background:#6366f1" onclick="syncPush()">Global Push</button>
-        <button style="background:#8b5cf6" onclick="syncPull()">Global Pull</button>
+        <input id="syncIdInput" placeholder="Enter Unique Global Sync Key">
+        <button id="pushBtn" style="background:#6366f1" onclick="syncPush()">Global Push</button>
+        <button id="pullBtn" style="background:#8b5cf6" onclick="syncPull()">Global Pull</button>
         <div class="local-actions">
             <button class="btn-sm" onclick="secureBackup()">Local Backup</button>
             <button class="btn-sm" onclick="secureRestore()">Local Restore</button>
@@ -117,6 +117,7 @@
         saveAndRender();
         document.getElementById("linkInput").value = "";
         document.getElementById("amountInput").value = "";
+        document.getElementById("notesInput").value = "";
     }
 
     function toggleStatus(id) {
@@ -181,36 +182,35 @@
 
     function deleteEntry(id) { if (prompt("Password:") === ADMIN_PASSWORD) { entries = entries.filter(e => e.id !== id); saveAndRender(); } }
 
-    // --- 🌍 NEW UNIVERSAL SYNC LOGIC ---
     async function syncPush() {
         const key = document.getElementById('syncIdInput').value.trim();
         if(!key) return alert("Enter a Global Key!");
         if(prompt("Password:") !== ADMIN_PASSWORD) return;
-        
+        const btn = document.getElementById('pushBtn');
+        btn.innerText = "Pushing...";
         try {
-            // We use KVStore - a simple way to store data by a name
-            const res = await fetch(`https://api.keyvalue.xyz/set/${key}/donations`, {
-                method: 'POST',
+            const res = await fetch(`https://json.extragood.io/bins/${key}`, {
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(entries)
             });
-            alert("✅ Pushed to Cloud! You can now use the key '" + key + "' on any device.");
+            if(res.ok) alert("✅ Success! Use key: " + key);
+            else throw new Error();
         } catch(e) { alert("Push Error. Try a different unique key."); }
+        finally { btn.innerText = "Global Push"; }
     }
 
     async function syncPull() {
         const key = document.getElementById('syncIdInput').value.trim();
         if(!key) return alert("Enter your Global Key!");
         if(prompt("Password:") !== ADMIN_PASSWORD) return;
-        
+        const btn = document.getElementById('pullBtn');
+        btn.innerText = "Pulling...";
         try {
-            const res = await fetch(`https://api.keyvalue.xyz/get/${key}/donations`);
+            const res = await fetch(`https://json.extragood.io/bins/${key}`);
             const data = await res.json();
-            if(data) {
-                entries = data;
-                saveAndRender();
-                alert("✅ Success! Data Pulled.");
-            }
-        } catch(e) { alert("Pull Error. Make sure the key is correct and you pushed data first."); }
+            if(data) { entries = data; saveAndRender(); alert("✅ Success! Data Pulled."); }
+        } catch(e) { alert("Pull Error. Check key."); }
+        finally { btn.innerText = "Global Pull"; }
     }
 
     function secureBackup() { if (prompt("Password:") === ADMIN_PASSWORD) { 
