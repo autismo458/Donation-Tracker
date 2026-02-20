@@ -3,63 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Tracker - Cloud & Local</title>
+    <title>Universal Tracker - Global Sync</title>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
         body { margin: 0; background: #020617; color: white; min-height: 200vh; }
-        
         header { padding: 25px; text-align: center; font-size: 24px; font-weight: 700; background: rgba(0,0,0,.3); border-bottom: 1px solid #1e293b; color: #4ade80; }
         .container { max-width: 900px; margin: auto; padding: 20px; }
-        
-        /* Inputs Section */
         .controls { display: grid; grid-template-columns: 2fr 120px 100px 1fr auto; gap: 10px; margin-bottom: 15px; }
-        
-        /* ☁️ UPDATED SYNC TRAY (With Backup/Restore hidden here) */
         .sync-tray { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-        .sync-tray input { flex-grow: 1; min-width: 150px; }
+        .sync-tray input { flex-grow: 1; min-width: 150px; border-color: #6366f1; }
         .local-actions { border-left: 1px solid #334155; padding-left: 10px; display: flex; gap: 8px; }
-        
         input, select { padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; font-size: 14px; }
         input:focus { border-color: #22c55e; }
         button { border: none; border-radius: 10px; padding: 10px 18px; cursor: pointer; font-weight: 600; background: #22c55e; color: white; transition: 0.2s; }
         button:hover { background: #16a34a; transform: translateY(-1px); }
-
-        /* 🧠 SMART STICKY HEADER (Cleaner Version) */
-        .sticky-wrapper { 
-            position: sticky; top: 0; z-index: 1000; 
-            background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(12px); 
-            border-bottom: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease;
-            padding: 15px 0;
-        }
+        .sticky-wrapper { position: sticky; top: 0; z-index: 1000; background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease; padding: 15px 0; }
         .sticky-wrapper.compact { padding: 10px 0; border-bottom: 2px solid #22c55e; }
         .sticky-wrapper.compact .stat-label { display: none; }
-        .sticky-wrapper.compact .stat-group { border: none; padding: 0 15px; }
-
         .summary-bar { max-width: 900px; margin: auto; padding: 0 20px; display: flex; justify-content: center; align-items: center; gap: 25px; }
         .stat-group { border-right: 1px solid #1e293b; padding-right: 25px; text-align: center; }
         .stat-group:last-child { border: none; }
         .stat-value { font-size: 18px; font-weight: bold; color: #4ade80; }
         .stat-label { font-size: 10px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 2px; }
-
-        /* Cards */
         .card { background: rgba(15, 23, 42, 0.5); border: 1px solid #1e293b; border-radius: 16px; padding: 18px; margin-bottom: 15px; display: flex; gap: 18px; align-items: center; }
         .card-img { width: 50px; height: 50px; border-radius: 12px; padding: 6px; background: white; flex-shrink: 0; object-fit: contain; }
         .card-content { flex-grow: 1; }
         .card-title { font-size: 17px; font-weight: 600; color: #f8fafc; text-transform: capitalize; }
         .domain-tag { font-size: 10px; color: #3b82f6; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; display: block; }
-        
         .meta-info { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; border-top: 1px solid #1e293b; padding-top: 12px; }
         .amt { font-size: 18px; font-weight: 800; color: #4ade80; }
         .usd-amt { font-size: 12px; color: #94a3b8; margin-left: 8px; }
-
-        .time-group { display: flex; gap: 15px; margin-top: 8px; }
-        .time-item { font-size: 11px; color: #64748b; }
-        .lbl-v { color: #3b82f6; font-weight: bold; }
-        .lbl-d { color: #22c55e; font-weight: bold; }
-
         .badge { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
         .pending { background: #334155; } .verified { background: #1e3a8a; color: #60a5fa; } .done { background: #064e3b; color: #34d399; }
-
         .actions { display: flex; gap: 8px; }
         .btn-sm { padding: 8px 12px; font-size: 12px; background: #1e293b; }
         .btn-delete { background: #450a0a; color: #f87171; }
@@ -79,10 +54,9 @@
     </div>
 
     <div class="sync-tray">
-        <input id="syncIdInput" placeholder="Secret Sync ID">
-        <button style="background:#6366f1" onclick="pushToCloud()">Push Cloud</button>
-        <button style="background:#8b5cf6" onclick="pullFromCloud()">Pull Cloud</button>
-        
+        <input id="syncIdInput" placeholder="Enter Global Sync Key (e.g. MySecretVault77)">
+        <button style="background:#6366f1" onclick="syncPush()">Global Push</button>
+        <button style="background:#8b5cf6" onclick="syncPull()">Global Pull</button>
         <div class="local-actions">
             <button class="btn-sm" onclick="secureBackup()">Local Backup</button>
             <button class="btn-sm" onclick="secureRestore()">Local Restore</button>
@@ -107,12 +81,12 @@
 <script>
     let entries = JSON.parse(localStorage.getItem("universal_donations")) || [];
     let usdRate = 1.38;
-    const ADMIN_PASSWORD = "1234";
+    const ADMIN_PASSWORD = "1234"; 
 
     window.onscroll = function() {
         const sticky = document.getElementById("stickyBar");
-        if (window.pageYOffset > 280) { sticky.classList.add("compact"); } 
-        else { sticky.classList.remove("compact"); }
+        if (window.pageYOffset > 280) sticky.classList.add("compact");
+        else sticky.classList.remove("compact");
     };
 
     async function updateRate() {
@@ -173,35 +147,30 @@
                 if((e.doneTimestamp || e.id) > oneWeekAgo) wCAD += valCAD;
             }
 
-            if(e.notes.toLowerCase().includes(search) || e.title.toLowerCase().includes(search) || e.amount.toString().includes(search)) {
-                const card = document.createElement("div");
-                card.className = "card";
-                card.innerHTML = `
-                    <img class="card-img" src="https://icon.horse/icon/${e.domain}" onerror="this.src='https://www.google.com/s2/favicons?domain=${e.domain}&sz=128'">
-                    <div class="card-content">
-                        <span class="domain-tag">${e.domain}</span>
-                        <div style="display:flex; justify-content:space-between;">
-                            <span class="card-title">${e.title}</span>
-                            <span class="badge ${e.status}">${e.status}</span>
-                        </div>
-                        <div style="font-size:13px; color:#94a3b8; margin-top:4px;">${e.notes || '...'}</div>
-                        <div class="meta-info">
-                            <div>
-                                <span class="amt">${e.currency} $${e.amount.toFixed(2)}</span>
-                                <span class="usd-amt">≈ $${(valCAD / usdRate).toFixed(2)} USD</span>
+            if(e.notes.toLowerCase().includes(search) || e.title.toLowerCase().includes(search) || e.amount.toString().includes(search) || e.status.includes(search)) {
+                grid.innerHTML += `
+                    <div class="card">
+                        <img class="card-img" src="https://icon.horse/icon/${e.domain}" onerror="this.src='https://www.google.com/s2/favicons?domain=${e.domain}&sz=128'">
+                        <div class="card-content">
+                            <span class="domain-tag">${e.domain}</span>
+                            <div style="display:flex; justify-content:space-between;">
+                                <span class="card-title">${e.title}</span>
+                                <span class="badge ${e.status}">${e.status}</span>
                             </div>
-                            <div class="actions">
-                                ${e.status !== 'done' ? `<button class="btn-sm" onclick="toggleStatus(${e.id})">Step</button>` : ''}
-                                <button class="btn-sm" onclick="window.open('${e.url}', '_blank')">Link</button>
-                                <button class="btn-sm btn-delete" onclick="deleteEntry(${e.id})">✕</button>
+                            <div style="font-size:13px; color:#94a3b8; margin-top:4px;">${e.notes || 'No note'}</div>
+                            <div class="meta-info">
+                                <div>
+                                    <span class="amt">${e.currency} $${e.amount.toFixed(2)}</span>
+                                    <span class="usd-amt">≈ $${(valCAD / usdRate).toFixed(2)} USD</span>
+                                </div>
+                                <div class="actions">
+                                    ${e.status !== 'done' ? `<button class="btn-sm" onclick="toggleStatus(${e.id})">Step</button>` : ''}
+                                    <button class="btn-sm" onclick="window.open('${e.url}', '_blank')">Link</button>
+                                    <button class="btn-sm btn-delete" onclick="deleteEntry(${e.id})">✕</button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="time-group">
-                            ${e.vTime ? `<div class="time-item"><span class="lbl-v">V:</span> ${e.vTime}</div>` : ''}
-                            ${e.dTime ? `<div class="time-item"><span class="lbl-d">D:</span> ${e.dTime}</div>` : ''}
                         </div>
                     </div>`;
-                grid.appendChild(card);
             }
         });
         document.getElementById("totalCAD").innerText = `$${tCAD.toFixed(2)}`;
@@ -211,42 +180,48 @@
     }
 
     function deleteEntry(id) { if (prompt("Password:") === ADMIN_PASSWORD) { entries = entries.filter(e => e.id !== id); saveAndRender(); } }
-    
+
+    // --- 🌍 NEW UNIVERSAL SYNC LOGIC ---
+    async function syncPush() {
+        const key = document.getElementById('syncIdInput').value.trim();
+        if(!key) return alert("Enter a Global Key!");
+        if(prompt("Password:") !== ADMIN_PASSWORD) return;
+        
+        try {
+            // We use KVStore - a simple way to store data by a name
+            const res = await fetch(`https://api.keyvalue.xyz/set/${key}/donations`, {
+                method: 'POST',
+                body: JSON.stringify(entries)
+            });
+            alert("✅ Pushed to Cloud! You can now use the key '" + key + "' on any device.");
+        } catch(e) { alert("Push Error. Try a different unique key."); }
+    }
+
+    async function syncPull() {
+        const key = document.getElementById('syncIdInput').value.trim();
+        if(!key) return alert("Enter your Global Key!");
+        if(prompt("Password:") !== ADMIN_PASSWORD) return;
+        
+        try {
+            const res = await fetch(`https://api.keyvalue.xyz/get/${key}/donations`);
+            const data = await res.json();
+            if(data) {
+                entries = data;
+                saveAndRender();
+                alert("✅ Success! Data Pulled.");
+            }
+        } catch(e) { alert("Pull Error. Make sure the key is correct and you pushed data first."); }
+    }
+
     function secureBackup() { if (prompt("Password:") === ADMIN_PASSWORD) { 
         const blob = new Blob([JSON.stringify(entries)], {type: "application/json"});
-        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `donations_${new Date().toLocaleDateString()}.json`; a.click();
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "backup.json"; a.click();
     }}
-
     function secureRestore() { if (prompt("Password:") === ADMIN_PASSWORD) document.getElementById('restoreInput').click(); }
-    
     function handleRestore(event) { 
         const reader = new FileReader(); 
-        reader.onload = (e) => { try { entries = JSON.parse(e.target.result); saveAndRender(); alert("Restored!"); } catch(err) { alert("Invalid file"); } };
+        reader.onload = (e) => { entries = JSON.parse(e.target.result); saveAndRender(); };
         reader.readAsText(event.target.files[0]);
-    }
-
-    async function pushToCloud() {
-        const sId = document.getElementById('syncIdInput').value.trim();
-        if(!sId || prompt("Password:") !== ADMIN_PASSWORD) return;
-        try {
-            const res = await fetch('https://jsonblob.com/api/jsonBlob', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ entries: entries })
-            });
-            localStorage.setItem("sync_blob_" + sId, res.headers.get('Location').split('/').pop());
-            alert("Cloud Saved! Use ID: " + sId + " on other devices.");
-        } catch(e) { alert("Push Error"); }
-    }
-
-    async function pullFromCloud() {
-        const sId = document.getElementById('syncIdInput').value.trim();
-        const bId = localStorage.getItem("sync_blob_" + sId);
-        if(!bId || prompt("Password:") !== ADMIN_PASSWORD) return;
-        try {
-            const res = await fetch(`https://jsonblob.com/api/jsonBlob/${bId}`);
-            const data = await res.json(); entries = data.entries; saveAndRender();
-            alert("Cloud Synced!");
-        } catch(e) { alert("Pull Error"); }
     }
 
     updateRate();
