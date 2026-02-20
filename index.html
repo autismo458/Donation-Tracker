@@ -3,35 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Tracker - Puter Sync</title>
+    <title>Universal Tracker - Complete Version</title>
     <script src="https://js.puter.com/v2/"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
         body { margin: 0; background: #020617; color: white; min-height: 200vh; }
+        
         header { padding: 25px; text-align: center; font-size: 24px; font-weight: 700; background: rgba(0,0,0,.3); border-bottom: 1px solid #1e293b; color: #4ade80; }
         .container { max-width: 900px; margin: auto; padding: 20px; }
+        
+        /* Input Section */
         .controls { display: grid; grid-template-columns: 2fr 120px 100px 1fr auto; gap: 10px; margin-bottom: 15px; }
+        
+        /* Sync Tray (Includes Local Backup - Option 3) */
         .sync-tray { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
         .sync-tray input { flex-grow: 1; min-width: 150px; border-color: #6366f1; }
+        .local-actions { border-left: 1px solid #334155; padding-left: 10px; display: flex; gap: 8px; }
+        
         input, select { padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; font-size: 14px; }
         input:focus { border-color: #22c55e; }
         button { border: none; border-radius: 10px; padding: 10px 18px; cursor: pointer; font-weight: 600; background: #22c55e; color: white; transition: 0.2s; }
         button:hover { background: #16a34a; transform: translateY(-1px); }
-        .sticky-wrapper { position: sticky; top: 0; z-index: 1000; background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 15px 0; }
-        .summary-bar { max-width: 900px; margin: auto; padding: 0 20px; display: flex; justify-content: center; align-items: center; gap: 25px; }
-        .stat-value { font-size: 18px; font-weight: bold; color: #4ade80; }
-        .stat-label { font-size: 10px; opacity: 0.6; text-transform: uppercase; display: block; }
+
+        /* 🧠 SMART STICKY HEADER (Minimized on scroll) */
+        .sticky-wrapper { 
+            position: sticky; top: 0; z-index: 1000; 
+            background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(12px); 
+            border-bottom: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease;
+            padding: 15px 0;
+        }
+        .sticky-wrapper.compact { padding: 8px 0; border-bottom: 2px solid #22c55e; }
+        .sticky-wrapper.compact .stat-label { display: none; }
+        .sticky-wrapper.compact .stat-group { border: none; padding: 0 15px; }
+
+        .summary-bar { max-width: 900px; margin: auto; padding: 0 20px; display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: nowrap; }
+        .stat-group { border-right: 1px solid #1e293b; padding-right: 20px; text-align: center; }
+        .stat-group:last-child { border: none; }
+        .stat-value { font-size: 17px; font-weight: bold; color: #4ade80; white-space: nowrap; }
+        .stat-label { font-size: 9px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 2px; }
+
+        /* Donation Cards */
         .card { background: rgba(15, 23, 42, 0.5); border: 1px solid #1e293b; border-radius: 16px; padding: 18px; margin-bottom: 15px; display: flex; gap: 18px; align-items: center; }
-        .card-img { width: 50px; height: 50px; border-radius: 12px; background: white; object-fit: contain; }
+        .card-img { width: 50px; height: 50px; border-radius: 12px; padding: 6px; background: white; flex-shrink: 0; object-fit: contain; }
         .card-content { flex-grow: 1; }
-        .badge { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; }
-        .pending { background: #334155; } .verified { background: #1e3a8a; color: #60a5fa; } .done { background: #064e3b; color: #34d399; }
+        .card-title { font-size: 17px; font-weight: 600; color: #f8fafc; text-transform: capitalize; }
+        .domain-tag { font-size: 10px; color: #3b82f6; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        
         .meta-info { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; border-top: 1px solid #1e293b; padding-top: 12px; }
+        .amt { font-size: 18px; font-weight: 800; color: #4ade80; }
+        .usd-amt { font-size: 12px; color: #94a3b8; margin-left: 8px; }
+
+        .time-group { display: flex; gap: 12px; margin-top: 8px; }
+        .time-item { font-size: 11px; color: #64748b; }
+        .lbl-v { color: #3b82f6; font-weight: bold; }
+        .lbl-d { color: #22c55e; font-weight: bold; }
+
+        .badge { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        .pending { background: #334155; } .verified { background: #1e3a8a; color: #60a5fa; } .done { background: #064e3b; color: #34d399; }
+
+        .actions { display: flex; gap: 8px; }
+        .btn-sm { padding: 8px 12px; font-size: 12px; background: #1e293b; }
+        .btn-delete { background: #450a0a; color: #f87171; }
     </style>
 </head>
 <body>
 
-<header>🌍 Universal Tracker</header>
+<header>🌍 Universal Donation Tracker</header>
 
 <div class="container">
     <div class="controls">
@@ -43,18 +80,25 @@
     </div>
 
     <div class="sync-tray">
-        <input id="syncIdInput" placeholder="Enter Global Secret Key (e.g. BroSync99)">
+        <input id="syncIdInput" placeholder="Global Secret Key (e.g. MyVault77)">
         <button id="pushBtn" style="background:#6366f1" onclick="syncPush()">Cloud Push</button>
         <button id="pullBtn" style="background:#8b5cf6" onclick="syncPull()">Cloud Pull</button>
+        <div class="local-actions">
+            <button class="btn-sm" onclick="secureBackup()">Backup</button>
+            <button class="btn-sm" onclick="secureRestore()">Restore</button>
+            <input type="file" id="restoreInput" style="display:none" onchange="handleRestore(event)">
+        </div>
     </div>
 
-    <input id="searchInput" style="width:100%; border-color:#4ade80; margin-bottom: 20px;" placeholder="Search..." oninput="render()">
+    <input id="searchInput" style="width:100%; border-color:#4ade80; margin-bottom: 20px;" placeholder="Search name, notes, status, or price..." oninput="render()">
 </div>
 
 <div class="sticky-wrapper" id="stickyBar">
     <div class="summary-bar">
-        <div class="stat-group"><span class="stat-label">Total (CAD)</span><span id="totalCAD" class="stat-value">$0.00</span></div>
-        <div class="stat-group"><span class="stat-label">Total (USD)</span><span id="totalUSD" class="stat-value" style="color:#60a5fa">$0.00</span></div>
+        <div class="stat-group"><span class="stat-label">Total Done</span><span id="totalCAD" class="stat-value">$0.00</span></div>
+        <div class="stat-group"><span class="stat-label">This Month</span><span id="monthCAD" class="stat-value">$0.00</span></div>
+        <div class="stat-group"><span class="stat-label">This Week</span><span id="weekCAD" class="stat-value">$0.00</span></div>
+        <div class="stat-group"><span class="stat-label">Total USD</span><span id="totalUSD" class="stat-value" style="color:#60a5fa">$0.00</span></div>
     </div>
 </div>
 
@@ -64,6 +108,13 @@
     let entries = JSON.parse(localStorage.getItem("universal_donations")) || [];
     let usdRate = 1.38;
     const ADMIN_PASSWORD = "1234";
+
+    // Minimizing scroll logic
+    window.onscroll = function() {
+        const sticky = document.getElementById("stickyBar");
+        if (window.pageYOffset > 280) sticky.classList.add("compact");
+        else sticky.classList.remove("compact");
+    };
 
     async function updateRate() {
         try {
@@ -80,16 +131,29 @@
         const urlObj = new URL(url);
         const domain = urlObj.hostname.replace('www.', '');
         let title = urlObj.pathname.split('/').filter(p => p.length > 2).pop() || domain;
+        title = title.replace(/[-_]/g, ' ').replace(/\.[^/.]+$/, "");
 
         entries.unshift({
             id: Date.now(), url, domain, title,
             amount: Number(document.getElementById("amountInput").value) || 0,
             currency: document.getElementById("currencyInput").value,
             notes: document.getElementById("notesInput").value,
-            status: 'pending', timestamp: new Date().getTime()
+            status: 'pending', vTime: null, dTime: null,
+            timestamp: new Date().getTime()
         });
         saveAndRender();
         document.getElementById("linkInput").value = "";
+        document.getElementById("amountInput").value = "";
+        document.getElementById("notesInput").value = "";
+    }
+
+    function toggleStatus(id) {
+        const i = entries.findIndex(e => e.id === id);
+        const now = new Date();
+        const timeStr = now.toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+        if(entries[i].status === 'pending') { entries[i].status = 'verified'; entries[i].vTime = timeStr; }
+        else if(entries[i].status === 'verified') { entries[i].status = 'done'; entries[i].dTime = timeStr; entries[i].doneTimestamp = now.getTime(); }
+        saveAndRender();
     }
 
     function saveAndRender() { localStorage.setItem("universal_donations", JSON.stringify(entries)); render(); }
@@ -98,68 +162,96 @@
         const grid = document.getElementById("entryGrid");
         const search = document.getElementById("searchInput").value.toLowerCase();
         grid.innerHTML = "";
-        let tCAD = 0;
+        let tCAD = 0, mCAD = 0, wCAD = 0;
+        const now = new Date();
+        const oneWeekAgo = now.getTime() - (7 * 24 * 60 * 60 * 1000);
 
         entries.forEach(e => {
             const valCAD = e.currency === "CAD" ? e.amount : e.amount * usdRate;
-            if(e.status === 'done') tCAD += valCAD;
+            if(e.status === 'done') {
+                tCAD += valCAD;
+                const dDate = new Date(e.doneTimestamp || e.id);
+                if(dDate.getMonth() === now.getMonth() && dDate.getFullYear() === now.getFullYear()) mCAD += valCAD;
+                if((e.doneTimestamp || e.id) > oneWeekAgo) wCAD += valCAD;
+            }
 
-            if(e.notes.toLowerCase().includes(search) || e.title.toLowerCase().includes(search)) {
+            // Enhanced search (includes amount and status)
+            if(e.notes.toLowerCase().includes(search) || e.title.toLowerCase().includes(search) || e.amount.toString().includes(search) || e.status.includes(search)) {
                 grid.innerHTML += `
                     <div class="card">
-                        <img class="card-img" src="https://icon.horse/icon/${e.domain}">
+                        <img class="card-img" src="https://icon.horse/icon/${e.domain}" onerror="this.src='https://www.google.com/s2/favicons?domain=${e.domain}&sz=128'">
                         <div class="card-content">
+                            <span class="domain-tag">${e.domain}</span>
                             <div style="display:flex; justify-content:space-between;">
-                                <span style="font-weight:bold">${e.title}</span>
+                                <span class="card-title">${e.title}</span>
                                 <span class="badge ${e.status}">${e.status}</span>
                             </div>
-                            <div style="font-size:12px; color:#94a3b8">${e.notes}</div>
+                            <div style="font-size:13px; color:#94a3b8; margin-top:4px;">${e.notes || '...'}</div>
                             <div class="meta-info">
-                                <span class="amt">${e.currency} $${e.amount.toFixed(2)}</span>
-                                <button onclick="deleteEntry(${e.id})">✕</button>
+                                <div>
+                                    <span class="amt">${e.currency} $${e.amount.toFixed(2)}</span>
+                                    <span class="usd-amt">≈ $${(valCAD / usdRate).toFixed(2)} USD</span>
+                                </div>
+                                <div class="actions">
+                                    ${e.status !== 'done' ? `<button class="btn-sm" onclick="toggleStatus(${e.id})">Step</button>` : ''}
+                                    <button class="btn-sm" onclick="window.open('${e.url}', '_blank')">Link</button>
+                                    <button class="btn-sm btn-delete" onclick="deleteEntry(${e.id})">✕</button>
+                                </div>
+                            </div>
+                            <div class="time-group">
+                                ${e.vTime ? `<div class="time-item"><span class="lbl-v">V:</span> ${e.vTime}</div>` : ''}
+                                ${e.dTime ? `<div class="time-item"><span class="lbl-d">D:</span> ${e.dTime}</div>` : ''}
                             </div>
                         </div>
                     </div>`;
             }
         });
         document.getElementById("totalCAD").innerText = `$${tCAD.toFixed(2)}`;
+        document.getElementById("monthCAD").innerText = `$${mCAD.toFixed(2)}`;
+        document.getElementById("weekCAD").innerText = `$${wCAD.toFixed(2)}`;
         document.getElementById("totalUSD").innerText = `$${(tCAD / usdRate).toFixed(2)}`;
     }
 
     function deleteEntry(id) { if (prompt("Password:") === ADMIN_PASSWORD) { entries = entries.filter(e => e.id !== id); saveAndRender(); } }
 
-    // --- 🚀 NEW PUTER SYNC LOGIC ---
+    // --- 🚀 PUTER SYNC LOGIC ---
     async function syncPush() {
         const key = document.getElementById('syncIdInput').value.trim();
         if(!key) return alert("Enter a Secret Key!");
         if(prompt("Password:") !== ADMIN_PASSWORD) return;
-
+        const btn = document.getElementById('pushBtn');
+        btn.innerText = "Pushing...";
         try {
-            // This stores it forever in Puter's free KV store
             await puter.kv.set(key, JSON.stringify(entries));
-            alert("✅ Cloud Saved! Key: " + key);
-        } catch (e) {
-            alert("❌ Sync Error. Try a different Key name.");
-        }
+            alert("✅ Cloud Saved! Your key: " + key);
+        } catch (e) { alert("Sync Error."); }
+        finally { btn.innerText = "Cloud Push"; }
     }
 
     async function syncPull() {
         const key = document.getElementById('syncIdInput').value.trim();
         if(!key) return alert("Enter your Secret Key!");
         if(prompt("Password:") !== ADMIN_PASSWORD) return;
-
+        const btn = document.getElementById('pullBtn');
+        btn.innerText = "Pulling...";
         try {
             const val = await puter.kv.get(key);
-            if(val) {
-                entries = JSON.parse(val);
-                saveAndRender();
-                alert("✅ Success! Data Pulled.");
-            } else {
-                alert("❌ No data found for that key.");
-            }
-        } catch (e) {
-            alert("❌ Pull Error.");
-        }
+            if(val) { entries = JSON.parse(val); saveAndRender(); alert("✅ Success! Data Pulled."); }
+            else alert("❌ No data found for that key.");
+        } catch (e) { alert("Pull Error."); }
+        finally { btn.innerText = "Cloud Pull"; }
+    }
+
+    // Local Backup Actions
+    function secureBackup() { if (prompt("Password:") === ADMIN_PASSWORD) { 
+        const blob = new Blob([JSON.stringify(entries)], {type: "application/json"});
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `backup_${new Date().toLocaleDateString()}.json`; a.click();
+    }}
+    function secureRestore() { if (prompt("Password:") === ADMIN_PASSWORD) document.getElementById('restoreInput').click(); }
+    function handleRestore(event) { 
+        const reader = new FileReader(); 
+        reader.onload = (e) => { try { entries = JSON.parse(e.target.result); saveAndRender(); } catch(err){alert("Invalid file");} };
+        reader.readAsText(event.target.files[0]);
     }
 
     updateRate();
