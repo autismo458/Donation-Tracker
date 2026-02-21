@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Tracker - Absolute Master</title>
+    <title>Universal Tracker - Phone Sync Fixed</title>
+    <script src="https://js.puter.com/v2/"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
         body { margin: 0; background: #020617; color: white; min-height: 200vh; }
@@ -21,12 +22,7 @@
         button:hover { background: #16a34a; transform: translateY(-1px); }
 
         /* SMART STICKY STATS */
-        .sticky-wrapper { 
-            position: sticky; top: 0; z-index: 1000; 
-            background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(12px); 
-            border-bottom: 1px solid rgba(255,255,255,0.1); transition: 0.3s;
-            padding: 15px 0;
-        }
+        .sticky-wrapper { position: sticky; top: 0; z-index: 1000; background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); transition: 0.3s; padding: 15px 0; }
         .sticky-wrapper.compact { padding: 8px 0; border-bottom: 2px solid #22c55e; }
         .sticky-wrapper.compact .stat-label { display: none; }
         .summary-bar { max-width: 900px; margin: auto; padding: 0 20px; display: flex; justify-content: center; gap: 20px; }
@@ -40,15 +36,12 @@
         .card-img { width: 50px; height: 50px; border-radius: 12px; background: white; flex-shrink: 0; object-fit: contain; padding: 5px; }
         .card-content { flex-grow: 1; }
         .card-title { font-size: 17px; font-weight: 600; color: #f8fafc; text-transform: capitalize; }
-        
         .meta-info { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; border-top: 1px solid #1e293b; padding-top: 12px; }
         .amt { font-size: 18px; font-weight: 800; color: #4ade80; }
         .usd-amt { font-size: 12px; color: #94a3b8; margin-left: 8px; }
-
         .time-group { display: flex; gap: 12px; margin-top: 8px; font-size: 11px; color: #64748b; }
         .lbl-v { color: #3b82f6; font-weight: bold; }
         .lbl-d { color: #22c55e; font-weight: bold; }
-        
         .badge { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
         .pending { background: #334155; } .verified { background: #1e3a8a; color: #60a5fa; } .done { background: #064e3b; color: #34d399; }
         .btn-sm { padding: 8px 12px; font-size: 12px; background: #1e293b; }
@@ -69,7 +62,7 @@
     </div>
 
     <div class="sync-tray">
-        <input id="syncIdInput" placeholder="Cloud Bin ID">
+        <input id="syncIdInput" placeholder="Secret Key (Global)">
         <button id="pushBtn" style="background:#6366f1" onclick="syncPush()">Cloud Push</button>
         <button id="pullBtn" style="background:#8b5cf6" onclick="syncPull()">Cloud Pull</button>
         <div class="tray-group">
@@ -79,7 +72,7 @@
         </div>
     </div>
 
-    <input id="searchInput" style="width:100%; border-color:#4ade80; margin-bottom: 20px;" placeholder="Search name, notes, status, or price..." oninput="render()">
+    <input id="searchInput" style="width:100%; border-color:#4ade80; margin-bottom: 20px;" placeholder="Search..." oninput="render()">
 </div>
 
 <div class="sticky-wrapper" id="stickyBar">
@@ -120,7 +113,6 @@
             const domain = urlObj.hostname.replace('www.', '');
             let title = urlObj.pathname.split('/').filter(p => p.length > 2).pop() || domain.split('.')[0];
             title = title.replace(/[-_]/g, ' ');
-
             entries.unshift({
                 id: Date.now(), url: urlObj.href, domain, title,
                 amount: Number(document.getElementById("amountInput").value) || 0,
@@ -130,7 +122,6 @@
             });
             saveAndRender();
             document.getElementById("linkInput").value = "";
-            document.getElementById("amountInput").value = "";
         } catch(e) { alert("Invalid URL"); }
     }
 
@@ -151,7 +142,6 @@
         grid.innerHTML = "";
         let tCAD = 0, mCAD = 0, wCAD = 0;
         const now = Date.now();
-
         entries.forEach(e => {
             const valCAD = e.currency === "CAD" ? e.amount : e.amount * usdRate;
             if(e.status === 'done') {
@@ -160,22 +150,17 @@
                 if(dDate.getMonth() === new Date().getMonth()) mCAD += valCAD;
                 if(now - (e.doneTimestamp || e.id) < 604800000) wCAD += valCAD;
             }
-
-            if(e.notes.toLowerCase().includes(search) || e.title.toLowerCase().includes(search) || e.amount.toString().includes(search) || e.status.includes(search)) {
+            if(e.notes.toLowerCase().includes(search) || e.title.toLowerCase().includes(search) || e.amount.toString().includes(search)) {
                 grid.innerHTML += `
                     <div class="card">
                         <img class="card-img" src="https://www.google.com/s2/favicons?domain=${e.domain}&sz=128">
                         <div class="card-content">
-                            <div style="display:flex; justify-content:space-between;">
-                                <span class="card-title">${e.title}</span>
-                                <span class="badge ${e.status}">${e.status}</span>
-                            </div>
+                            <div style="display:flex; justify-content:space-between;"><span class="card-title">${e.title}</span><span class="badge ${e.status}">${e.status}</span></div>
                             <div style="font-size:12px; color:#94a3b8; margin: 4px 0;">${e.notes || '...'}</div>
                             <div class="meta-info">
                                 <div><span class="amt">${e.currency} $${e.amount.toFixed(2)}</span><span class="usd-amt">≈ $${(valCAD/usdRate).toFixed(2)} USD</span></div>
                                 <div style="display:flex; gap:8px;">
                                     ${e.status !== 'done' ? `<button class="btn-sm" onclick="toggleStatus(${e.id})">Step</button>` : ''}
-                                    <button class="btn-sm" onclick="window.open('${e.url}', '_blank')">Link</button>
                                     <button class="btn-sm btn-delete" onclick="deleteEntry(${e.id})">✕</button>
                                 </div>
                             </div>
@@ -195,53 +180,43 @@
 
     function deleteEntry(id) { if (prompt("Password:") === ADMIN_PASSWORD) { entries = entries.filter(e => e.id !== id); saveAndRender(); } }
 
+    // --- 🌍 BULLETPROOF PHONE SYNC ---
     async function syncPush() {
-        if(prompt("Password:") !== ADMIN_PASSWORD) return;
-        const btn = document.getElementById('pushBtn'); btn.innerText = "Pushing...";
+        const key = document.getElementById('syncIdInput').value.trim();
+        if(!key || prompt("Password:") !== ADMIN_PASSWORD) return;
+        const btn = document.getElementById('pushBtn'); btn.innerText = "Syncing...";
         try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Bin-Private': 'false' },
-                body: JSON.stringify(entries)
-            });
-            const data = await res.json();
-            if(data.metadata.id) {
-                document.getElementById('syncIdInput').value = data.metadata.id;
-                alert("✅ PUSH SUCCESS! USE THIS ID ON PHONE: " + data.metadata.id);
-            }
-        } catch (e) { alert("Cloud Error"); }
+            await puter.ready(); // Wakes up the connection
+            // We use 'kv.set' with a global flag
+            await puter.kv.set(`global_key_${key}`, JSON.stringify(entries));
+            alert("✅ PUSHED! Now use the same key on your phone.");
+        } catch (e) { alert("Cloud Error. Ensure you are not in Private Mode."); }
         finally { btn.innerText = "Cloud Push"; }
     }
 
     async function syncPull() {
-        const binId = document.getElementById('syncIdInput').value.trim();
-        if(!binId || prompt("Password:") !== ADMIN_PASSWORD) return;
+        const key = document.getElementById('syncIdInput').value.trim();
+        if(!key || prompt("Password:") !== ADMIN_PASSWORD) return;
+        const btn = document.getElementById('pullBtn'); btn.innerText = "Pulling...";
         try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`);
-            const data = await res.json();
-            if(data.record) { entries = data.record; saveAndRender(); alert("✅ SYNCED!"); }
-        } catch (e) { alert("Pull Error"); }
+            await puter.ready(); // Wakes up the connection
+            const val = await puter.kv.get(`global_key_${key}`);
+            if(val) { entries = JSON.parse(val); saveAndRender(); alert("✅ SYNCED TO PHONE!"); }
+            else { alert("❌ No data found for that key."); }
+        } catch (e) { alert("Pull Error. If on iPhone, go to Settings > Safari and turn OFF 'Prevent Cross-Site Tracking'."); }
+        finally { btn.innerText = "Cloud Pull"; }
     }
 
-    function secureBackup() { 
-        if (prompt("Password:") !== ADMIN_PASSWORD) return;
+    function secureBackup() { if (prompt("Password:") === ADMIN_PASSWORD) { 
         const blob = new Blob([JSON.stringify(entries)], {type: "application/json"});
-        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); 
-        a.download = `tracker_${new Date().toISOString().slice(0,10)}.json`; a.click();
-    }
-    
-    function secureRestore() { 
-        if (prompt("Password:") === ADMIN_PASSWORD) document.getElementById('restoreInput').click(); 
-    }
-    
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `backup.json`; a.click();
+    }}
+    function secureRestore() { if (prompt("Password:") === ADMIN_PASSWORD) document.getElementById('restoreInput').click(); }
     function handleRestore(event) { 
         const reader = new FileReader(); 
-        reader.onload = (e) => { 
-            try { entries = JSON.parse(e.target.result); saveAndRender(); alert("Data Loaded!"); } 
-            catch(err){alert("Invalid File");} 
-        };
+        reader.onload = (e) => { entries = JSON.parse(e.target.result); saveAndRender(); alert("Loaded!"); };
         reader.readAsText(event.target.files[0]);
     }
-
     updateRate();
 </script>
 </body>
