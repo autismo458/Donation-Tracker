@@ -3,75 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Tracker - Final Sync Fix</title>
+    <title>Universal Tracker - Manual Master</title>
     <style>
-        /* [STYLING REMAINS THE SAME AS BEFORE] */
         * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
         body { margin: 0; background: #020617; color: white; min-height: 200vh; }
-        header { padding: 25px; text-align: center; font-size: 24px; font-weight: 700; background: rgba(0,0,0,.3); border-bottom: 1px solid #1e293b; color: #4ade80; }
-        .container { max-width: 900px; margin: auto; padding: 20px; }
-        .controls { display: grid; grid-template-columns: 2fr 120px 100px 1fr auto; gap: 10px; margin-bottom: 15px; }
-        .sync-tray { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-        .sync-tray input { flex-grow: 1; min-width: 150px; border-color: #6366f1; }
-        input, select { padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; font-size: 14px; }
-        button { border: none; border-radius: 10px; padding: 10px 18px; cursor: pointer; font-weight: 600; background: #22c55e; color: white; transition: 0.2s; }
-        .sticky-wrapper { position: sticky; top: 0; z-index: 1000; background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 15px 0; }
-        .sticky-wrapper.compact { padding: 8px 0; border-bottom: 2px solid #22c55e; }
-        .summary-bar { max-width: 900px; margin: auto; padding: 0 20px; display: flex; justify-content: center; gap: 20px; }
-        .stat-group { border-right: 1px solid #1e293b; padding-right: 20px; text-align: center; }
-        .stat-value { font-size: 17px; font-weight: bold; color: #4ade80; }
-        .stat-label { font-size: 9px; opacity: 0.6; text-transform: uppercase; display: block; }
-        .card { background: rgba(15, 23, 42, 0.5); border: 1px solid #1e293b; border-radius: 16px; padding: 18px; margin-bottom: 15px; display: flex; gap: 18px; align-items: center; }
-        .card-img { width: 45px; height: 45px; border-radius: 10px; background: white; flex-shrink: 0; object-fit: contain; padding: 4px; }
-        .meta-info { display: flex; justify-content: space-between; margin-top: 10px; border-top: 1px solid #1e293b; padding-top: 10px; }
-        .amt { font-size: 18px; font-weight: 800; color: #4ade80; }
-        .badge { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
-        .pending { background: #334155; } .verified { background: #1e3a8a; } .done { background: #064e3b; }
+        header { padding: 20px; text-align: center; font-size: 22px; font-weight: 700; color: #4ade80; border-bottom: 1px solid #1e293b; }
+        .container { max-width: 800px; margin: auto; padding: 15px; }
+        
+        /* 🔧 MANUAL SYNC BOX */
+        .manual-sync-area { background: #0f172a; border: 2px dashed #334155; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
+        #syncBox { width: 100%; height: 60px; background: #020617; color: #94a3b8; border: 1px solid #1e293b; border-radius: 8px; padding: 10px; font-size: 10px; margin-bottom: 10px; resize: none; }
+        
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .full-width { grid-column: span 2; }
+        input, select { padding: 12px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; }
+        button { border: none; border-radius: 10px; padding: 12px; cursor: pointer; font-weight: 600; background: #22c55e; color: white; }
+
+        /* 📊 STICKY STATS */
+        .sticky-wrapper { position: sticky; top: 0; z-index: 1000; background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #1e293b; padding: 12px 0; }
+        .summary-bar { display: flex; justify-content: space-around; max-width: 800px; margin: auto; }
+        .stat-group { text-align: center; }
+        .stat-value { font-size: 16px; font-weight: bold; color: #4ade80; display: block; }
+        .stat-label { font-size: 9px; opacity: 0.6; text-transform: uppercase; }
+
+        /* 🃏 CARDS */
+        .card { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 15px; margin-bottom: 12px; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .card-title { font-weight: bold; color: #f8fafc; text-transform: capitalize; font-size: 18px; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
+        .pending { background: #334155; } .verified { background: #1e3a8a; color: #60a5fa; } .done { background: #064e3b; color: #34d399; }
+        .meta { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid #1e293b; }
+        .time-info { font-size: 10px; color: #64748b; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-<header>🌍 Universal Tracker</header>
+<header>Universal Donation Tracker</header>
 
 <div class="container">
+    <div class="manual-sync-area">
+        <div style="font-size: 12px; margin-bottom: 8px; color: #6366f1; font-weight: bold;">Quick-Sync (Copy from PC, Paste on Phone)</div>
+        <textarea id="syncBox" placeholder="Paste data here..."></textarea>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="exportData()" style="background: #6366f1; flex: 1;">Generate Code</button>
+            <button onclick="importData()" style="background: #8b5cf6; flex: 1;">Load Pasted Code</button>
+        </div>
+    </div>
+
     <div class="controls">
-        <input id="linkInput" placeholder="Paste link...">
+        <input id="linkInput" class="full-width" placeholder="Paste link (e.g. gofundme.com/...)">
         <input id="amountInput" type="number" placeholder="Amount">
         <select id="currencyInput"><option value="CAD">CAD</option><option value="USD">USD</option></select>
-        <input id="notesInput" placeholder="Note...">
-        <button onclick="addEntry()">Add</button>
+        <input id="notesInput" class="full-width" placeholder="Note...">
+        <button onclick="addEntry()" class="full-width">Add Entry</button>
     </div>
 
-    <div class="sync-tray">
-        <input id="syncIdInput" placeholder="Create a Secret Key (e.g. MyVault77)">
-        <button id="pushBtn" style="background:#6366f1" onclick="syncPush()">Cloud Push</button>
-        <button id="pullBtn" style="background:#8b5cf6" onclick="syncPull()">Cloud Pull</button>
-        <button class="btn-sm" onclick="secureBackup()" style="background:#334155; padding:10px; border-radius:10px; color:white; font-size:12px;">Local Backup</button>
-        <button class="btn-sm" onclick="secureRestore()" style="background:#334155; padding:10px; border-radius:10px; color:white; font-size:12px;">Local Load</button>
-        <input type="file" id="restoreInput" style="display:none" onchange="handleRestore(event)">
-    </div>
-
-    <input id="searchInput" style="width:100%; border-color:#4ade80; margin-bottom: 20px;" placeholder="Search..." oninput="render()">
+    <input id="searchInput" style="width:100%; border-color:#4ade80; margin-bottom: 20px;" placeholder="Search Name, Note, or Price..." oninput="render()">
 </div>
 
-<div class="sticky-wrapper" id="stickyBar">
+<div class="sticky-wrapper">
     <div class="summary-bar">
-        <div class="stat-group"><span class="stat-label">Total Done</span><span id="totalCAD" class="stat-value">$0.00</span></div>
-        <div class="stat-group"><span class="stat-label">This Month</span><span id="monthCAD" class="stat-value">$0.00</span></div>
-        <div class="stat-group"><span class="stat-label">This Week</span><span id="weekCAD" class="stat-value">$0.00</span></div>
-        <div class="stat-group"><span class="stat-label">Total USD</span><span id="totalUSD" class="stat-value" style="color:#60a5fa">$0.00</span></div>
+        <div class="stat-group"><span class="stat-label">Done</span><span id="totalCAD" class="stat-value">$0.00</span></div>
+        <div class="stat-group"><span class="stat-label">Month</span><span id="monthCAD" class="stat-value">$0.00</span></div>
+        <div class="stat-group"><span class="stat-label">Week</span><span id="weekCAD" class="stat-value">$0.00</span></div>
+        <div class="stat-group"><span class="stat-label">USD Total</span><span id="totalUSD" class="stat-value" style="color:#60a5fa">$0.00</span></div>
     </div>
 </div>
 
-<div class="container" id="entryGrid"></div>
+<div class="container" id="grid"></div>
 
 <script>
-    let entries = JSON.parse(localStorage.getItem("universal_donations")) || [];
+    let entries = JSON.parse(localStorage.getItem("universal_v10")) || [];
     let usdRate = 1.38;
-    const ADMIN_PASSWORD = "1234";
 
     async function updateRate() {
-        try { const res = await fetch('https://open.er-api.com/v6/latest/USD'); const data = await res.json(); usdRate = data.rates.CAD; render(); } catch(e) {}
+        try { const res = await fetch('https://open.er-api.com/v6/latest/USD'); const data = await res.json(); usdRate = data.rates.CAD; render(); } catch(e){}
     }
 
     function addEntry() {
@@ -80,30 +86,33 @@
         const urlObj = new URL(rawUrl.startsWith('http') ? rawUrl : 'https://' + rawUrl);
         const domain = urlObj.hostname.replace('www.', '');
         entries.unshift({
-            id: Date.now(), url: urlObj.href, domain, title: domain.split('.')[0],
+            id: Date.now(), domain, 
+            title: urlObj.pathname.split('/').filter(p => p.length > 2).pop() || domain.split('.')[0],
             amount: Number(document.getElementById("amountInput").value) || 0,
             currency: document.getElementById("currencyInput").value,
             notes: document.getElementById("notesInput").value,
-            status: 'pending', doneTimestamp: null
+            status: 'pending', vTime: null, dTime: null, doneTimestamp: null
         });
-        saveAndRender();
+        save();
         document.getElementById("linkInput").value = "";
     }
 
     function toggleStatus(id) {
         const i = entries.findIndex(e => e.id === id);
-        if(entries[i].status === 'pending') entries[i].status = 'verified';
-        else if(entries[i].status === 'verified') { entries[i].status = 'done'; entries[i].doneTimestamp = Date.now(); }
-        saveAndRender();
+        const time = new Date().toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+        if(entries[i].status === 'pending') { entries[i].status = 'verified'; entries[i].vTime = time; }
+        else if(entries[i].status === 'verified') { entries[i].status = 'done'; entries[i].dTime = time; entries[i].doneTimestamp = Date.now(); }
+        save();
     }
 
-    function saveAndRender() { localStorage.setItem("universal_donations", JSON.stringify(entries)); render(); }
+    function save() { localStorage.setItem("universal_v10", JSON.stringify(entries)); render(); }
 
     function render() {
-        const grid = document.getElementById("entryGrid");
+        const grid = document.getElementById("grid");
         const search = document.getElementById("searchInput").value.toLowerCase();
         grid.innerHTML = "";
         let tCAD = 0, mCAD = 0, wCAD = 0;
+        
         entries.forEach(e => {
             const valCAD = e.currency === "CAD" ? e.amount : e.amount * usdRate;
             if(e.status === 'done') {
@@ -111,19 +120,23 @@
                 if(new Date(e.doneTimestamp).getMonth() === new Date().getMonth()) mCAD += valCAD;
                 if(Date.now() - e.doneTimestamp < 604800000) wCAD += valCAD;
             }
-            if(e.notes.toLowerCase().includes(search) || e.title.toLowerCase().includes(search)) {
+
+            if(e.title.toLowerCase().includes(search) || e.notes.toLowerCase().includes(search) || e.amount.toString().includes(search)) {
                 grid.innerHTML += `
                     <div class="card">
-                        <img class="card-img" src="https://www.google.com/s2/favicons?domain=${e.domain}&sz=128">
-                        <div class="card-content" style="flex-grow:1">
-                            <div style="display:flex; justify-content:space-between;"><span style="font-weight:bold; text-transform:capitalize">${e.title}</span><span class="badge ${e.status}">${e.status}</span></div>
-                            <div style="font-size:12px; color:#94a3b8; margin: 5px 0;">${e.notes}</div>
-                            <div class="meta-info">
-                                <div><span class="amt">${e.currency} $${e.amount}</span></div>
-                                <div style="display:flex; gap:5px;">
-                                    <button onclick="toggleStatus(${e.id})" style="padding:5px 10px; font-size:11px;">Step</button>
-                                    <button onclick="deleteEntry(${e.id})" style="background:#450a0a; padding:5px 10px; font-size:11px;">✕</button>
-                                </div>
+                        <div class="card-header">
+                            <span class="card-title">${e.title.replace(/[-_]/g, ' ')}</span>
+                            <span class="badge ${e.status}">${e.status}</span>
+                        </div>
+                        <div style="font-size:13px; color:#94a3b8;">${e.notes || '...'}</div>
+                        <div class="time-info">
+                            ${e.vTime ? `[V: ${e.vTime}] ` : ''} ${e.dTime ? `[D: ${e.dTime}]` : ''}
+                        </div>
+                        <div class="meta">
+                            <div><span style="font-weight:800; color:#4ade80;">${e.currency} $${e.amount}</span></div>
+                            <div style="display:flex; gap:10px;">
+                                ${e.status !== 'done' ? `<button onclick="toggleStatus(${e.id})" style="padding:5px 15px; font-size:12px;">Step</button>` : ''}
+                                <button onclick="deleteItem(${e.id})" style="background:#450a0a; padding:5px 10px;">✕</button>
                             </div>
                         </div>
                     </div>`;
@@ -135,49 +148,25 @@
         document.getElementById("totalUSD").innerText = `$${(tCAD / usdRate).toFixed(2)}`;
     }
 
-    function deleteEntry(id) { if (prompt("Pass:") === ADMIN_PASSWORD) { entries = entries.filter(e => e.id !== id); saveAndRender(); } }
+    function deleteItem(id) { if(confirm("Delete?")) { entries = entries.filter(e => e.id !== id); save(); } }
 
-    // --- 🚀 NEW ACCOUNT-FREE GLOBAL SYNC ---
-    async function syncPush() {
-        const key = document.getElementById('syncIdInput').value.trim();
-        if(!key || prompt("Pass:") !== ADMIN_PASSWORD) return;
-        const btn = document.getElementById('pushBtn'); btn.innerText = "Pushing...";
+    /* 🔄 THE NO-FAIL SYNC LOGIC */
+    function exportData() {
+        const code = btoa(JSON.stringify(entries)); // Encrypts to text
+        document.getElementById("syncBox").value = code;
+        document.getElementById("syncBox").select();
+        alert("Code Generated! Copy the text in the dashed box and send it to your phone (via Email, Text, or Note).");
+    }
+
+    function importData() {
+        const code = document.getElementById("syncBox").value.trim();
+        if(!code) return alert("Paste the code first!");
         try {
-            await fetch(`https://api.jsonbin.io/v3/b`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Bin-Name': key, 'X-Bin-Private': 'false' },
-                body: JSON.stringify(entries)
-            }).then(r => r.json()).then(data => {
-                // We save the BIN ID to the key field so you don't have to guess
-                document.getElementById('syncIdInput').value = data.metadata.id;
-                alert("✅ PUSHED! Copy this ID to your phone: " + data.metadata.id);
-            });
-        } catch (e) { alert("Error pushing. Try a simpler key."); }
-        finally { btn.innerText = "Cloud Push"; }
-    }
-
-    async function syncPull() {
-        const id = document.getElementById('syncIdInput').value.trim();
-        if(!id || prompt("Pass:") !== ADMIN_PASSWORD) return;
-        const btn = document.getElementById('pullBtn'); btn.innerText = "Pulling...";
-        try {
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${id}/latest`);
-            const data = await res.json();
-            if(data.record) { entries = data.record; saveAndRender(); alert("✅ SYNCED!"); }
-        } catch (e) { alert("Pull Error. Check ID."); }
-        finally { btn.innerText = "Cloud Pull"; }
-    }
-
-    function secureBackup() { 
-        if (prompt("Pass:") !== ADMIN_PASSWORD) return;
-        const blob = new Blob([JSON.stringify(entries)], {type: "application/json"});
-        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "backup.json"; a.click();
-    }
-    function secureRestore() { if (prompt("Pass:") === ADMIN_PASSWORD) document.getElementById('restoreInput').click(); }
-    function handleRestore(event) { 
-        const reader = new FileReader(); 
-        reader.onload = (e) => { entries = JSON.parse(e.target.result); saveAndRender(); alert("Loaded!"); };
-        reader.readAsText(event.target.files[0]);
+            entries = JSON.parse(atob(code));
+            save();
+            alert("✅ Successfully Synced!");
+            document.getElementById("syncBox").value = "";
+        } catch(e) { alert("❌ Invalid Code."); }
     }
 
     updateRate();
